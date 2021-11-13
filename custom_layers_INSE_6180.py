@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow.keras as keras
 
 class Encoder_Block(keras.layers.Layer):
+    # encoder layers of compression network
     def __init__(self, hidden_layer_sizes, activation=keras.activations.tanh, **kwargs):
         super().__init__(**kwargs)
         self.hidden_layer_sizes = hidden_layer_sizes
@@ -11,8 +12,6 @@ class Encoder_Block(keras.layers.Layer):
                                          kernel_regularizer=keras.regularizers.l2(0.01)) for size in self.hidden_layer_sizes[:-1]]
         self.out = keras.layers.Dense(self.hidden_layer_sizes[-1], activation=self.activation,
                                       kernel_initializer="he_normal", kernel_regularizer=keras.regularizers.l2(0.01))
-#         self.out = keras.layers.Dense(self.hidden_layer_sizes[-1], activation=keras.activations.linear,
-#                                       kernel_initializer="he_normal", kernel_regularizer=keras.regularizers.l2(0.01))
 
     def call(self, inputs):
         # self.input_size = input_size = inputs.shape[1]
@@ -27,6 +26,7 @@ class Encoder_Block(keras.layers.Layer):
         return {**base_config}  # not shown
 
 class Decoder_Block(keras.layers.Layer):
+    # decoder layers of compresion network
     def __init__(self, hidden_layer_sizes, activation=keras.activations.tanh, input_size = None, **kwargs):
         super().__init__(**kwargs)
         self.hidden_layer_sizes = hidden_layer_sizes
@@ -49,9 +49,8 @@ class Decoder_Block(keras.layers.Layer):
         return {**base_config}  # not shown
 
 
-# Defining the Custom Error Construction Layer between the Input Layer and Output Layer of the Autoencoder
-
 class Feature_Extraction_Block(keras.layers.Layer):
+    # Defining the Custom Error Construction Layer between the Input Layer and Output Layer of the Autoencoder
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -77,6 +76,7 @@ class Feature_Extraction_Block(keras.layers.Layer):
         return {**base_config}  # not shown
 
 class Estimation_Block(keras.layers.Layer):
+    # estimation network
     def __init__(self, hidden_layer_sizes, activation=keras.activations.tanh, dropout_rate = None, **kwargs):
         super().__init__(**kwargs)
         self.hidden_layer_sizes = hidden_layer_sizes

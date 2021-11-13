@@ -54,18 +54,27 @@ class DAGMM:
 
 
     def dagmm_loss(self, input):
+        # calculate the loss function with three loss components
         x_ori = self.model.layers[0](input)  # input layer
         z_c = self.model.layers[1](x_ori)  # encoder block
         x_res = self.model.layers[2](z_c)  # decoder block
         z = self.model.layers[3]((x_ori, x_res, z_c))  # feature_extraction block
         gamma = self.model.layers[4](z)
+        
+        # reconstruction loss of compression network
         reconstruction_loss = tf.reduce_mean(tf.reduce_sum(tf.square(x_ori - x_res), axis=1), axis=0)
 #         self.gmm.fix_op()
         self.gmm.fit(z, gamma)
         energy = self.gmm.energy(z)
         diag_loss = self.gmm.cov_diag_loss()
+        
+        # energy loss of training samples
         energy_loss = self.lambda1 * tf.reduce_mean(energy)
+        
+        # elements on the diagonal corvariance matrix
         cov_loss = self.lambda2 * diag_loss
+        
+        # sum of three loss components
         loss = reconstruction_loss + energy_loss + cov_loss
         return loss
 
@@ -136,6 +145,7 @@ class DAGMM:
 
 
     def predict(self, inputs):
+        # calculate the energy of input samples
         if self.normalize:
             inputs = self.scaler.transform(inputs)
         hiddens = [layer for layer in self.model.layers]

@@ -40,6 +40,7 @@ class DNN:
                                          kernel_regularizer=keras.regularizers.l2(1e-4)))
             self.model.add(keras.layers.Dropout(rate=self.rate))
         
+        # copy weights from pretrained network
         if self.pretrain_sae is True:
             self.model.set_weights(self.pretrained_model.layers[0].get_weights())
 
@@ -55,7 +56,10 @@ class DNN:
             self.scaler = StandardScaler().fit(X)
             X = self.scaler.transform(X)
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        
         if self.pretrain_sae is True or self.pretrain_dagmm is True:
+            # first train few epochs only the last layer of DNN
             for layer in self.model.layers[:-1]:
                 layer.trainable = False
             self.model.compile(loss="sparse_categorical_crossentropy",
@@ -63,6 +67,7 @@ class DNN:
                                metrics=["accuracy"])
             history = self.model.fit(X_train, y_train, epochs=10,
                                   validation_data=(X_valid, y_valid))
+            # then train all layers of DNN
             for layer in self.model.layers[:-1]:
                 layer.trainable = True
         self.model.compile(loss="sparse_categorical_crossentropy",
@@ -83,6 +88,7 @@ class DNN:
         X_test = inputs
         if self.normalize:
             X_test = self.scaler.transform(X_test)
+        # if monte carlo technique is used
         if self.monte_carlo is True:
             y_probas = np.stack([self.model(X_test, training=True)
                              for sample in range(100)])  # make 100 predictions over the test set
